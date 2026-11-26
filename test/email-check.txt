@@ -1,0 +1,2 @@
+# Test file for the gitleaks-public check. Delete after testing.
+contact: zivtst@gmail.com
