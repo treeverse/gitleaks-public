@@ -1,0 +1,16 @@
+[[rules]]
+id = "email-address"
+description = "Email address"
+regex = '''[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}'''
+keywords = ["@"]
+
+# Placeholders and non-emails only; real addresses are allowed per repo.
+[[rules.allowlists]]
+regexTarget = "match"
+regexes = [
+  '''(?i)@(?:[a-z0-9-]+\.)*example\.(?:com|org|net)$''',
+  '''(?i)@users\.noreply\.github\.com$''',
+  '''(?i)^noreply@github\.com$''',
+  '''(?i)^git@''',
+  '''(?i)@\d+(?:\.\d+)?x\.(?:png|jpe?g|gif|svg|webp)$''',
+]

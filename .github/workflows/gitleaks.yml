@@ -1,0 +1,36 @@
+# Required on all public repos via org ruleset; scans each PR's commits.
+name: gitleaks-public
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: treeverse/gitleaks-public
+          ref: main
+          path: .gitleaks-public
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: src
+          fetch-depth: 0
+          persist-credentials: false
+
+      - run: .gitleaks-public/scripts/install-gitleaks.sh
+
+      - name: Scan PR commits
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+        run: .gitleaks-public/scripts/scan.sh src "$BASE..$HEAD"

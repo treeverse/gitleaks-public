@@ -1,0 +1,49 @@
+# Manual full-history scan of every public org repo; report only.
+name: full-scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.list.outputs.repos }}
+    steps:
+      - id: list
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          repos=$(gh repo list "$OWNER" --visibility public --no-archived --limit 1000 \
+            --json nameWithOwner -q '[.[].nameWithOwner]')
+          echo "repos=$repos" >> "$GITHUB_OUTPUT"
+
+  scan:
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        repo: ${{ fromJson(needs.list.outputs.repos) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: .gitleaks-public
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          path: src
+          fetch-depth: 0
+          persist-credentials: false
+
+      - run: .gitleaks-public/scripts/install-gitleaks.sh
+
+      - name: Scan full history
+        run: .gitleaks-public/scripts/scan.sh src
